@@ -90,7 +90,9 @@ def extract_audio_features(
 
     # Load speech and extract features
     if source_sample_rate != target_sample_rate:
-        sound = librosa.resample(audio_data, orig_sr=source_sample_rate, target_sr=target_sample_rate)
+        sound = librosa.resample(
+            audio_data, orig_sr=source_sample_rate, target_sr=target_sample_rate
+        )
     melFrames = np.transpose(melSpectra(sound, target_sample_rate, wsize, hsize))
     melDelta = np.insert(np.diff(melFrames, n=1, axis=0), 0, zeroVecD, axis=0)
     melDDelta = np.insert(np.diff(melFrames, n=2, axis=0), 0, zeroVecDD, axis=0)
@@ -99,6 +101,7 @@ def extract_audio_features(
     # features = addContext(features, ctxWin)  # TODO: revisit this!
     features = np.reshape(features, (1, features.shape[0], features.shape[1]))
     return features
+
 
 def melSpectra(y, sr, wsize, hsize):
     cnst = 1 + (int(sr * wsize) / 2)  # 883.0

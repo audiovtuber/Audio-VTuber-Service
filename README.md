@@ -1,4 +1,4 @@
-This repo represents the backend (and probably the frontend) service for generating face landmarks from audio. 
+This repo represents the backend (and probably the frontend) service for generating face landmarks from audio.
 
 # Docker Setup
 1. (Optional) Train a model using the [training code](https://github.com/audiovtuber/Talking-Face-Landmarks-from-Speech) and export it as a TorchScript model. Copy the trained torchscript model into this repo's project root with the name `torchscript_model.pt`

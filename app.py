@@ -8,14 +8,20 @@ from model import TalkingFaceTorchScript
 def greet(name):
     return "Hello " + name + "!"
 
+
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--listen-all", action="store_true", help="Set this flag to expose gradio on all network interfaces. Useful if running in a docker container")
+    parser.add_argument(
+        "--listen-all",
+        action="store_true",
+        help="Set this flag to expose gradio on all network interfaces. Useful if running in a docker container",
+    )
     return parser.parse_args()
-    
+
+
 def main(args):
     # TODO: refactor model loading to pull from wandb or other location(s)
-    model = TalkingFaceTorchScript(model_path='./torchscript_model.pt')
+    model = TalkingFaceTorchScript(model_path="./torchscript_model.pt")
 
     with gr.Blocks() as demo:
         gr.Markdown("Record some audio and see the predicted face shape")
@@ -30,6 +36,7 @@ def main(args):
     server_name = "0.0.0.0" if args.listen_all else None
     demo.launch(server_name=server_name)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = parse_args()
     main(args)
