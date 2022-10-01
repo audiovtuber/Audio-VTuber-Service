@@ -27,7 +27,7 @@ def main(args):
         gr.Markdown("Record some audio and see the predicted face shape")
         with gr.Row():
             inp = gr.Microphone()
-            out = gr.Textbox()
+            out = gr.Video()
         btn = gr.Button("Run")
         btn.click(fn=model.predict, inputs=inp, outputs=out)
 

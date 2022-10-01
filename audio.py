@@ -5,7 +5,6 @@ import os
 import subprocess
 
 import librosa
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.animation as manimation
 import numpy as np
