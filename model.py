@@ -1,4 +1,6 @@
+import os
 import subprocess
+import tempfile
 
 import numpy as np
 import torch
@@ -110,8 +112,13 @@ class TalkingFaceTorchScript:
     # This function is generally faster than `predict`. During local testing, it processed 15 seconds of audio in 12 seconds, whereas `predict` took 21 seconds
     def predict_animation(self, gradio_audio):
         source_sample_rate, source_audio_data = gradio_audio
-        audio_filename = "source_audio.wav"
-        video_filename = "basic_animation.mp4"
+
+        # Slightly abusing tempfile's ability to generate random file names. We need two video files since ffmpeg won't edit in-place
+        # Also sharing that randomness for audio and video to make debugging easier in the future!
+        source_video_id = next(tempfile._get_candidate_names())
+        temp_audio_path = f"audio-{source_video_id}.wav"
+        temp_video_path = f"animation-{source_video_id}.mp4"
+        output_video_path = f"output-{next(tempfile._get_candidate_names())}.mp4"
 
         predictions = self._predict(gradio_audio)
 
@@ -143,11 +150,12 @@ class TalkingFaceTorchScript:
         )
 
         FFwriter = animation.FFMpegWriter(fps=25, extra_args=["-vcodec", "libx264"])
-        anim.save(video_filename, writer=FFwriter)
+        anim.save(temp_video_path, writer=FFwriter)
 
         # add audio back in
-        sf.write(audio_filename, source_audio_data, source_sample_rate, "PCM_24")
-        cmd = f"ffmpeg -y -i {video_filename} -i {audio_filename} -map 0:v -map 1:a -c:v copy -shortest output.mp4"
+        sf.write(temp_audio_path, source_audio_data, source_sample_rate, "PCM_24")
+        cmd = f"ffmpeg -y -i {temp_video_path} -i {temp_audio_path} -map 0:v -map 1:a -c:v copy -shortest {output_video_path}"
         subprocess.call(cmd, shell=True)
-
-        return "output.mp4"
+        os.remove(temp_video_path)
+        os.remove(temp_audio_path)
+        return output_video_path
