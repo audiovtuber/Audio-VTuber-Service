@@ -1,21 +1,34 @@
 import os
 import subprocess
 import tempfile
+from typing import Tuple
 
 import numpy as np
 import torch
 import librosa
 import matplotlib.animation as animation
 from matplotlib.figure import Figure
+import matplotlib.image as mpimg
+from matplotlib.patches import Polygon
 import soundfile as sf
 
 from audio import extract_audio_features, write_video_wpts_wsound
 
 
 class TalkingFaceTorchScript:
-    def __init__(self, model_path: str, target_sample_rate: int = 44100):
+    def __init__(
+        self,
+        model_path: str,
+        head_image: str,
+        target_sample_rate: int = 44100,
+        mouth_offset: Tuple[int, int] = None,
+    ):
         self.model = torch.jit.load(model_path)
         self.target_sample_rate = target_sample_rate
+        self.head_image = mpimg.imread(head_image)
+        self.mouth_offset = mouth_offset if mouth_offset is not None else (0, 0)
+        # TODO: get head image from UI instead
+        print(f"Loaded Head Image {head_image}")
 
     @torch.no_grad()
     def _predict(self, gradio_audio):
@@ -120,25 +133,53 @@ class TalkingFaceTorchScript:
         temp_video_path = f"animation-{source_video_id}.mp4"
         output_video_path = f"output-{next(tempfile._get_candidate_names())}.mp4"
 
-        predictions = self._predict(gradio_audio)
+        # Scale predictions to head_image size
+        # TODO: parameterize instead of hardcoding
+        predictions = 600 * self._predict(gradio_audio)
+
+        # Add mouth offset
+        predictions[:, :, 0] += self.mouth_offset[0]
+        predictions[:, :, 1] += self.mouth_offset[1]
 
         figure = Figure(figsize=(6.00, 6.00))
+
         # The 111 specifies 1 row, 1 column on subplot #1
         ax = figure.add_subplot(111)
         ax.set_title("Predicted Face Landmarks")
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
+        ax.set_xlim(0, 600)
+        ax.set_ylim(0, 600)
         ax.set_axis_off()
         ax.invert_yaxis()  # otherwise, the face will be upside-down
-        scatter = ax.scatter([], [], c="#1f77b4", marker=".")
+        # ax.add_image(self.head_image)
+        ax.imshow(self.head_image)
+        # scatter = ax.scatter([], [], c="#1f77b4", marker=".")
+        mouth_polygon = Polygon(
+            [
+                predictions[0, 48],
+                predictions[0, 51],
+                predictions[0, 54],
+                predictions[0, 57],
+            ],
+            facecolor="k",
+            edgecolor="r",
+        )
+        ax.add_patch(mouth_polygon)
 
         def init():
-            return (scatter,)
+            return (mouth_polygon,)
 
         # https://stackoverflow.com/questions/9401658/how-to-animate-a-scatter-plot
         def animate(i):
-            scatter.set_offsets(predictions[i])
-            return (scatter,)
+            # scatter.set_offsets(predictions[i])
+            mouth_polygon.set_xy(
+                [
+                    predictions[i, 48],
+                    predictions[i, 51],
+                    predictions[i, 54],
+                    predictions[i, 57],
+                ]
+            )
+            return (mouth_polygon,)
 
         anim = animation.FuncAnimation(
             figure,

@@ -59,7 +59,12 @@ def build_static_block(predict_fn):
 
 def main(args):
     # TODO: refactor model loading to pull from wandb or other location(s)
-    model = TalkingFaceTorchScript(model_path="./torchscript_model.pt")
+    # TODO: configure mouth offset in UI
+    model = TalkingFaceTorchScript(
+        model_path="./torchscript_model.pt",
+        head_image="commish_mouthy_small.png",
+        mouth_offset=(130, 20),
+    )
 
     # demo = build_static_block(model.predict)
     demo = build_static_block(model.predict_animation)
