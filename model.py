@@ -6,10 +6,11 @@ from typing import Tuple
 import numpy as np
 import torch
 import librosa
+import matplotlib
 import matplotlib.animation as animation
 from matplotlib.figure import Figure
 import matplotlib.image as mpimg
-from matplotlib.patches import Polygon
+import matplotlib.patches as patches
 import soundfile as sf
 
 from audio import extract_audio_features, write_video_wpts_wsound
@@ -22,11 +23,15 @@ class TalkingFaceTorchScript:
         head_image: str,
         target_sample_rate: int = 44100,
         mouth_offset: Tuple[int, int] = None,
+        mouth_stretch: int = 0,
+        mouth_angle: float = 0.0,
     ):
         self.model = torch.jit.load(model_path)
         self.target_sample_rate = target_sample_rate
         self.head_image = mpimg.imread(head_image)
         self.mouth_offset = mouth_offset if mouth_offset is not None else (0, 0)
+        self.mouth_stretch = mouth_stretch
+        self.mouth_angle = mouth_angle
         # TODO: get head image from UI instead
         print(f"Loaded Head Image {head_image}")
 
@@ -137,6 +142,14 @@ class TalkingFaceTorchScript:
         # TODO: parameterize instead of hardcoding
         predictions = 600 * self._predict(gradio_audio)
 
+        # Scale mouth width to match image (hacky)
+        # TODO: replace with linspace or similar
+        predictions[:, 48, 0] -= self.mouth_stretch
+        predictions[:, 59, 0] -= 2 * self.mouth_stretch / 3
+        predictions[:, 58, 0] -= self.mouth_stretch / 3
+        predictions[:, 54, 0] += self.mouth_stretch
+        predictions[:, 55, 0] += 2 * self.mouth_stretch / 3
+        predictions[:, 56, 0] += self.mouth_stretch / 3
         # Add mouth offset
         predictions[:, :, 0] += self.mouth_offset[0]
         predictions[:, :, 1] += self.mouth_offset[1]
@@ -152,16 +165,26 @@ class TalkingFaceTorchScript:
         ax.invert_yaxis()  # otherwise, the face will be upside-down
         # ax.add_image(self.head_image)
         ax.imshow(self.head_image)
-        # scatter = ax.scatter([], [], c="#1f77b4", marker=".")
-        mouth_polygon = Polygon(
+
+        mouth_polygon = patches.Polygon(
             [
-                predictions[0, 48],
-                predictions[0, 51],
                 predictions[0, 54],
-                predictions[0, 57],
+                *predictions[0, 55:60],
+                predictions[0, 48],
             ],
             facecolor="k",
-            edgecolor="r",
+            edgecolor=(143 / 255.0, 67 / 255.0, 0.0),
+            linewidth=3,
+        )
+
+        mouth_pivot_point = 48
+        mouth_polygon.set_transform(
+            ax.transData
+            + matplotlib.transforms.Affine2D().rotate_deg_around(
+                predictions[0, mouth_pivot_point, 0],
+                predictions[0, mouth_pivot_point, 1],
+                self.mouth_angle,
+            )
         )
         ax.add_patch(mouth_polygon)
 
@@ -173,10 +196,8 @@ class TalkingFaceTorchScript:
             # scatter.set_offsets(predictions[i])
             mouth_polygon.set_xy(
                 [
+                    *predictions[i, 54:60],
                     predictions[i, 48],
-                    predictions[i, 51],
-                    predictions[i, 54],
-                    predictions[i, 57],
                 ]
             )
             return (mouth_polygon,)

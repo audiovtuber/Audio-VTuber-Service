@@ -63,7 +63,9 @@ def main(args):
     model = TalkingFaceTorchScript(
         model_path="./torchscript_model.pt",
         head_image="commish_mouthy_small.png",
-        mouth_offset=(130, 20),
+        mouth_offset=(45, 45),
+        mouth_angle=12.0,
+        mouth_stretch=30,
     )
 
     # demo = build_static_block(model.predict)
