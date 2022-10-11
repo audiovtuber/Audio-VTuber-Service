@@ -142,6 +142,16 @@ class TalkingFaceTorchScript:
         # TODO: parameterize instead of hardcoding
         predictions = 600 * self._predict(gradio_audio)
 
+        # Scale the mouth vertically and keep it mostly closed
+        mouth_y_delta = predictions[:, 55:60, 1] - predictions[:, 48:49, 1]
+        squared_delta_norm = mouth_y_delta**2.2 / np.max(mouth_y_delta)
+        predictions[:, 55:60, 1] = np.maximum(
+            predictions[:, 55:60, 1]
+            - mouth_y_delta
+            + squared_delta_norm
+            - np.average(squared_delta_norm),
+            predictions[:, 48:49, 1] + 5,  # +5 offsets some rotation weirdness
+        )
         # Scale mouth width to match image (hacky)
         # TODO: replace with linspace or similar
         predictions[:, 48, 0] -= self.mouth_stretch
