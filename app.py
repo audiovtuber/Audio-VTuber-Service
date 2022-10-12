@@ -18,6 +18,12 @@ def parse_args():
         help="Port to listen on",
         default=7860,
     )
+    parser.add_argument(
+        '--head-image',
+        type=str,
+        help="Image to load and overlay the animation upon",
+        default="commish_mouthy_small.png",
+    )
     return parser.parse_args()
 
 
@@ -29,7 +35,6 @@ def build_streaming_interface(model):
         live=True,
     )
     return demo
-
 
 def build_static_block(predict_fn):
     # TODO: upload flagged logs (and their blobs) somewhere
@@ -67,7 +72,10 @@ def main(args):
     # TODO: configure mouth offset in UI
     model = TalkingFaceTorchScript(
         model_path="./torchscript_model.pt",
-        head_image="commish_mouthy_small.png",
+        head_image=args.head_image,
+        #mouth_offset=(5, 0),
+        #mouth_angle=3,
+        #mouth_stretch=-10,
         mouth_offset=(45, 50),
         mouth_angle=13.0,
         mouth_stretch=30,
