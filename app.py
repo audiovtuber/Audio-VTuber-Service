@@ -13,13 +13,13 @@ def parse_args():
         help="Set this flag to expose gradio on all network interfaces. Useful if running in a docker container",
     )
     parser.add_argument(
-        '--port',
+        "--port",
         type=int,
         help="Port to listen on",
         default=7860,
     )
     parser.add_argument(
-        '--head-image',
+        "--head-image",
         type=str,
         help="Image to load and overlay the animation upon",
         default="commish_mouthy_small.png",
@@ -35,6 +35,7 @@ def build_streaming_interface(model):
         live=True,
     )
     return demo
+
 
 def build_static_block(predict_fn):
     # TODO: upload flagged logs (and their blobs) somewhere
@@ -73,9 +74,9 @@ def main(args):
     model = TalkingFaceTorchScript(
         model_path="./torchscript_model.pt",
         head_image=args.head_image,
-        #mouth_offset=(5, 0),
-        #mouth_angle=3,
-        #mouth_stretch=-10,
+        # mouth_offset=(5, 0),
+        # mouth_angle=3,
+        # mouth_stretch=-10,
         mouth_offset=(45, 50),
         mouth_angle=13.0,
         mouth_stretch=30,

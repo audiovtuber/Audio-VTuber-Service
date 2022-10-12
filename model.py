@@ -25,7 +25,7 @@ class TalkingFaceTorchScript:
         mouth_offset: Tuple[int, int] = None,
         mouth_stretch: int = 0,
         mouth_angle: float = 0.0,
-        output_dir: str = 'generated-videos'
+        output_dir: str = "generated-videos",
     ):
         self.model = torch.jit.load(model_path)
         self.target_sample_rate = target_sample_rate
@@ -140,7 +140,9 @@ class TalkingFaceTorchScript:
         source_video_id = next(tempfile._get_candidate_names())
         temp_audio_path = f"audio-{source_video_id}.wav"
         temp_video_path = f"animation-{source_video_id}.mp4"
-        output_video_path = f"{self.output_dir}/output-{next(tempfile._get_candidate_names())}.mp4"
+        output_video_path = (
+            f"{self.output_dir}/output-{next(tempfile._get_candidate_names())}.mp4"
+        )
 
         # Scale predictions to head_image size
         # TODO: parameterize instead of hardcoding
