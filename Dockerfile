@@ -11,4 +11,6 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-CMD ["python", "app.py", "--listen-all"]
+
+ENV PORT 7860
+CMD ["sh", "-c", "python app.py --listen-all --port ${PORT}"]

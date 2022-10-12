@@ -25,6 +25,7 @@ class TalkingFaceTorchScript:
         mouth_offset: Tuple[int, int] = None,
         mouth_stretch: int = 0,
         mouth_angle: float = 0.0,
+        output_dir: str = 'generated-videos'
     ):
         self.model = torch.jit.load(model_path)
         self.target_sample_rate = target_sample_rate
@@ -34,6 +35,9 @@ class TalkingFaceTorchScript:
         self.mouth_angle = mouth_angle
         # TODO: get head image from UI instead
         print(f"Loaded Head Image {head_image}")
+
+        os.makedirs(output_dir, exist_ok=True)
+        self.output_dir = output_dir
 
     @torch.no_grad()
     def _predict(self, gradio_audio):
@@ -136,7 +140,7 @@ class TalkingFaceTorchScript:
         source_video_id = next(tempfile._get_candidate_names())
         temp_audio_path = f"audio-{source_video_id}.wav"
         temp_video_path = f"animation-{source_video_id}.mp4"
-        output_video_path = f"output-{next(tempfile._get_candidate_names())}.mp4"
+        output_video_path = f"{self.output_dir}/output-{next(tempfile._get_candidate_names())}.mp4"
 
         # Scale predictions to head_image size
         # TODO: parameterize instead of hardcoding
@@ -168,12 +172,10 @@ class TalkingFaceTorchScript:
 
         # The 111 specifies 1 row, 1 column on subplot #1
         ax = figure.add_subplot(111)
-        ax.set_title("Predicted Face Landmarks")
         ax.set_xlim(0, 600)
         ax.set_ylim(0, 600)
         ax.set_axis_off()
         ax.invert_yaxis()  # otherwise, the face will be upside-down
-        # ax.add_image(self.head_image)
         ax.imshow(self.head_image)
 
         mouth_polygon = patches.Polygon(
@@ -203,7 +205,6 @@ class TalkingFaceTorchScript:
 
         # https://stackoverflow.com/questions/9401658/how-to-animate-a-scatter-plot
         def animate(i):
-            # scatter.set_offsets(predictions[i])
             mouth_polygon.set_xy(
                 [
                     *predictions[i, 54:60],

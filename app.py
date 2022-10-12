@@ -12,6 +12,12 @@ def parse_args():
         action="store_true",
         help="Set this flag to expose gradio on all network interfaces. Useful if running in a docker container",
     )
+    parser.add_argument(
+        '--port',
+        type=int,
+        help="Port to listen on",
+        default=7860,
+    )
     return parser.parse_args()
 
 
@@ -26,11 +32,10 @@ def build_streaming_interface(model):
 
 
 def build_static_block(predict_fn):
-
     # TODO: upload flagged logs (and their blobs) somewhere
     flag_callback = gr.CSVLogger()
     with gr.Blocks() as demo:
-        gr.Markdown("Record some audio and see the predicted face shape")
+        gr.Markdown("Record some audio and see the animation")
         with gr.Row():
             inp = gr.Microphone(label="audio_path", show_label=False)
             with gr.Column():
@@ -73,7 +78,7 @@ def main(args):
 
     # server_name is a workaround to gradio not always exposing the port when working locally in a docker container (e.g. when using WSL2)
     server_name = "0.0.0.0" if args.listen_all else None
-    demo.launch(server_name=server_name)
+    demo.launch(server_name=server_name, server_port=args.port)
 
 
 if __name__ == "__main__":
