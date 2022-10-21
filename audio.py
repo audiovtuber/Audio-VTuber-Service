@@ -84,8 +84,8 @@ def extract_audio_features(
     target_sample_rate: int = 44100,
 ):
     # Used for padding zeros to first and second temporal differences
-    zeroVecD = np.zeros((1, 64), dtype="f16")
-    zeroVecDD = np.zeros((2, 64), dtype="f16")
+    zeroVecD = np.zeros((1, 64), dtype=np.float32)
+    zeroVecDD = np.zeros((2, 64), dtype=np.float32)
 
     # Load speech and extract features
     if source_sample_rate != target_sample_rate:
