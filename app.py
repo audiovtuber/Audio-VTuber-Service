@@ -47,23 +47,52 @@ def build_static_block(predict_fn):
             with gr.Column():
                 # NOTE: for whatever reason, regular videos get mirrored by gradio once we add a second button for flagging. Hacky fix: pass `mirror_webcam=False`
                 out = gr.Video(
-                    label="video_path", show_label=False, mirror_webcam=False
+                    label="video_path",
+                    show_label=False,
+                    mirror_webcam=False,
+                    interactive=False,
                 )
                 flag_btn = gr.Button("Flag", visible=False)
+                flag_thanks = gr.Markdown(
+                    "Thanks for flagging and helping us improve our performance!",
+                    visible=False,
+                )
         btn = gr.Button("Run")
 
         def predict(args):
             print(f"args: {args}")
-            return {flag_btn: gr.update(visible=True), out: predict_fn(*args)}
+            return {
+                flag_btn: gr.update(visible=True),
+                flag_thanks: gr.update(visible=False),
+                out: predict_fn(*args),
+            }
 
-        btn.click(fn=lambda *args: predict(args), inputs=inp, outputs=[flag_btn, out])
+        btn.click(
+            fn=lambda *args: predict(args),
+            inputs=inp,
+            outputs=[flag_btn, flag_thanks, out],
+        )
         flag_callback.setup([inp, out], "flagged_data_points")
+
+        def flag_and_reset(*args):
+            flag_callback.flag(args)
+            return {
+                flag_btn: gr.update(visible=False),
+                flag_thanks: gr.update(visible=True),
+            }
+
         flag_btn.click(
-            lambda *args: flag_callback.flag(args),
+            # lambda *args: flag_callback.flag(args),
+            flag_and_reset,
             inputs=[inp, out],
-            outputs=None,
+            outputs=[flag_btn, flag_thanks],
             preprocess=False,
         )
+
+        # def reset_app(*args):
+        #     print("resetting")
+        #     return {flag_btn: gr.update(visible=False)}
+        # out.clear(reset_app, inputs=None, outputs=[flag_btn])
 
     return demo
 
