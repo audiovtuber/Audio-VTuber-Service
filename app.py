@@ -61,11 +61,9 @@ This app will generate an animated expression using only your voice!
         with gr.Row():
             inp = gr.Microphone(label="audio_path", show_label=False)
             with gr.Column():
-                # NOTE: for whatever reason, regular videos get mirrored by gradio once we add a second button for flagging. Hacky fix: pass `mirror_webcam=False`
                 out = gr.Video(
                     label="video_path",
                     show_label=False,
-                    mirror_webcam=False,
                     interactive=False,
                 )
                 flag_btn = gr.Button("Flag", visible=False)
