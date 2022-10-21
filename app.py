@@ -40,8 +40,24 @@ def build_streaming_interface(model):
 def build_static_block(predict_fn):
     # TODO: upload flagged logs (and their blobs) somewhere
     flag_callback = gr.CSVLogger()
-    with gr.Blocks() as demo:
-        gr.Markdown("Record some audio and see the animation")
+    with gr.Blocks(css="#instruction_example {width: 300px;}") as demo:
+        gr.Markdown(
+            """
+# Audio VTuber
+This app will generate an animated expression using only your voice!
+"""
+        )
+        gr.Image("instruction.png", tool=False, elem_id="instruction_example")
+        gr.Markdown(
+            """
+## How-To, Step-by-Step
+1. Press `Record from microphone`. If prompted, allow your browser to access the microphone
+2. Say whatever you like! I recommend keeping it under 10 seconds so you don't have to wait long
+3. Press `Stop recording`
+4. Press the `Run` button and wait patiently for the video to be loaded
+5. Play the video :)
+"""
+        )
         with gr.Row():
             inp = gr.Microphone(label="audio_path", show_label=False)
             with gr.Column():
@@ -89,10 +105,20 @@ def build_static_block(predict_fn):
             preprocess=False,
         )
 
-        # def reset_app(*args):
-        #     print("resetting")
-        #     return {flag_btn: gr.update(visible=False)}
-        # out.clear(reset_app, inputs=None, outputs=[flag_btn])
+        with gr.Row():
+            gr.Markdown(
+                """
+## Feedback
+If you're unhappy with the result, please click the `Flag` button to share the audio and video with us so we can improve our model! It will not be used for any other purpose
+## About
+This app was created as my contribution to the [Full Stack Deep Learning 2022 Cohort](https://fullstackdeeplearning.com/). Code for this app can be found in [github](https://github.com/audiovtuber/Audio-VTuber-Service)
+and training code can also be found [in github](https://github.com/audiovtuber/Talking-Face-Landmarks-from-Speech)
+## Credit
+The training code is a reimplementation of [Generating Talking Face Landmarks from Speech](https://link.springer.com/chapter/10.1007/978-3-319-93764-9_35)
+(Eskimez, et. al. ; Original code [here](https://github.com/audiovtuber/Talking-Face-Landmarks-from-Speech))
+The [GRID Corpus](https://spandh.dcs.shef.ac.uk//gridcorpus) was also used in the training of the model
+"""
+            )
 
     return demo
 
